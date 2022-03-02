@@ -69,11 +69,13 @@ def check_groups(canvas_groups_category_id, task_name, github_groups, pr_number)
         members = github_group.split("-")
         for member in members:
             if member in registered_user and github_group not in groups_canvas:
-                github_repo.get_pull(pr_number).create_issue_comment("Student " + member + " already registered for "                                                                             "this task")
+                if pr_number is not None:
+                    github_repo.get_pull(pr_number).create_issue_comment("Student " + member + " already registered for "                                                                             "this task")
                 raise Exception("User {0} already registered for {1} !".format(member, task_name))
             id_member = course.get_user_id(member)
             if id_member is None:
-                github_repo.get_pull(pr_number).create_issue_comment("Missing student registration :" + member)
+                if pr_number is not None:
+                    github_repo.get_pull(pr_number).create_issue_comment("Missing student registration :" + member)
                 raise Exception("User {0} not found !".format(member))
 
 
