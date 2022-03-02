@@ -3,7 +3,7 @@
 # Filename: update_grading.py
 import json
 import os, sys, logging
-
+import argparse
 from utils.course import Course
 from github import Github
 
@@ -19,6 +19,10 @@ issue_assignees = ['vladomitrovic']
 course_repo_name = 'Canvas-API' 
 GITHUB_GRADING_PATH = "./grading-criteria.md"
 
+
+# Parsing the criteria markdown in GITHUB_GRADING_PATH to a dictionary
+# Assignments (sections) are separated by ##
+# Description, table and minimum requirements are separated by \n\n\n
 def parse_criteria():
     f = open(GITHUB_GRADING_PATH, "r")
     file = f.read()
@@ -26,7 +30,7 @@ def parse_criteria():
     result = {}
 
     for section in sections[1:]:
-        items = section.split("\n\n")
+        items = section.split("\n\n\n")
         result[items[0].strip()] = {}
         result[items[0].strip()]['description'] = items[1]
         result[items[0].strip()]['table'] = parse_table(items[2])
@@ -35,6 +39,7 @@ def parse_criteria():
     return result
 
 
+# Parsing a markdown table into a dictionary
 def parse_table(table):
     result = []
     header = []
@@ -46,21 +51,24 @@ def parse_table(table):
         if n > 1:
             values = [t.strip() for t in line.split('|')[1:-1]]
             for col, value in zip(header, values):
+                if col == '':
+                    col = 'Criteria'
                 data[col] = value
             result.append(data)
     return result
 
 
+# Validation of the parsed criteria: Tasks, task items, tables items
 def validate_criteria(criteria):
     task = [
-            "Presentations",
-            "Essays",
-            "Video Demos",
-            "Open-source contributions",
-            "Executable Tutorials",
-            "Course automation",
-            "Feedback"
-        ]
+        "Presentations",
+        "Essays",
+        "Video Demos",
+        "Open-source contributions",
+        "Executable Tutorials",
+        "Course automation",
+        "Feedback"
+    ]
     task_items = [
             "description",
             "table",
@@ -72,25 +80,26 @@ def validate_criteria(criteria):
 
     print("Checking the grading file format...")
     if list(criteria.keys()) != task:
-        errors = errors+("Assignments don't match" + str(table_items)+'\n\n')
+        errors = errors + ("Assignments don't match" + str(table_items) + '\n\n')
 
     for task in criteria:
         if list(criteria[task].keys()) != task_items:
-            valid = False
             errors = errors + ("Error in : " + task + '\n')
             errors = errors + ("Missing one key " + str(task_items) + '\n\n')
         for table_item in criteria[task]["table"]:
             if list(table_item.keys()) != table_items:
                 errors = errors + ("Error in : " + task + '\n')
-                errors = errors + ("Missing one key " + str(table_items) + ' for :' +  '\n')
+                errors = errors + ("Missing one key " + str(table_items) + ' for :' + '\n')
                 errors = errors + (str(table_item) + '\n\n')
 
     if errors:
         print(errors)
-        github_repo.create_issue("[CANVAS ACTION] Grading file is not correctly formatted", body=errors, assignees=issue_assignees)
+        github_repo.create_issue("[CANVAS ACTION] Grading file is not correctly formatted", body=errors,
+                                 assignees=issue_assignees)
         raise Exception("The grading file is not correctly formatted ! ")
 
 
+# Create or update the rubrics in canvas
 def update_rubrics(github_criteria, canvas_rubrics, canvas_assignments):
     for title in github_criteria:
 
@@ -105,6 +114,7 @@ def update_rubrics(github_criteria, canvas_rubrics, canvas_assignments):
                                  canvas_assignments[title])
 
 
+# Create or update the assignments in canvas
 def update_assignments(github_criteria, canvas_assignments, canvas_group_set):
     for title in github_criteria:
 
@@ -127,6 +137,7 @@ def update_assignments(github_criteria, canvas_assignments, canvas_group_set):
                 })
 
 
+# Create or update the group set in canvas
 def update_group_set(github_criteria, canvas_group_set):
     for title in github_criteria:
 
@@ -139,27 +150,38 @@ def update_group_set(github_criteria, canvas_group_set):
             )
 
 
-def main():
-    only_check = sys.argv[1] if 1 < len(sys.argv) else None
+# Parse arguments of the script
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', dest='mode', type=str, help='Is only check')
+    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number')
 
-    if only_check == 'check':
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    if args.mode == 'check':
         print('Check only mode selected,  no update will be made')
         github_criteria = parse_criteria()
-
 
     else:
         print('Starting the update...')
 
         github_criteria = parse_criteria()
 
+        # Sync the group set
         canvas_group_set = course.get_group_categories()
         update_group_set(github_criteria, canvas_group_set)
         canvas_group_set = course.get_group_categories()
 
+        # Sync the assignments
         canvas_assignments = course.get_assignments()
         update_assignments(github_criteria, canvas_assignments, canvas_group_set)
         canvas_assignments = course.get_assignments()
 
+        # Sync the rubrics
         canvas_rubrics = course.get_rubrics()
         update_rubrics(github_criteria, canvas_rubrics, canvas_assignments)
 

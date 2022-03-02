@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # Filename: update_task.py
 import json, os, sys
-
 from utils.course import Course
 from github import Github
+import argparse
 
 # ENVs for updating task
 CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
@@ -17,6 +17,7 @@ GITHUB_CONTRIBUTION_PATH = "./contributions"
 course = Course(CANVAS_URL, CANVAS_TOKEN, CANVAS_COURSE_ID)
 
 
+# Get sub directories of a given path
 def get_sub_directory(path):
     categories = dict()
 
@@ -28,6 +29,7 @@ def get_sub_directory(path):
     return categories
 
 
+# Create new groups and remove deleted groups
 def update_groups(canvas_groups_category_id, github_groups):
     groups_canvas = course.list_groups(canvas_groups_category_id)
     print("Canvas groups : " + str(len(groups_canvas)))
@@ -53,7 +55,10 @@ def update_groups(canvas_groups_category_id, github_groups):
         print(r)
 
 
-def check_groups(canvas_groups_category_id, task_name, github_groups):
+# Check if the group is valid
+# No same member in same group set
+# Member registered in canvas
+def check_groups(canvas_groups_category_id, task_name, github_groups, pr_number):
     groups_canvas = course.list_groups(canvas_groups_category_id)
     registered_user = []
     for group_canvas in groups_canvas:
@@ -64,14 +69,15 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
         members = github_group.split("-")
         for member in members:
             if member in registered_user and github_group not in groups_canvas:
+                github_repo.get_pull(pr_number).create_issue_comment("Student " + member + " already registered for "                                                                             "this task")
                 raise Exception("User {0} already registered for {1} !".format(member, task_name))
             id_member = course.get_user_id(member)
             if id_member is None:
-                github_repo.create_issue("[CANVAS ACTION] Missing student registration", body=member,
-                                         assignee='vladomitrovic', labels=['Course registration'])
+                github_repo.get_pull(pr_number).create_issue_comment("Missing student registration :" + member)
                 raise Exception("User {0} not found !".format(member))
 
 
+# Mapping from github task name to canvas group set id
 def task_to_group_category_id(task_name, canvas_groups_set):
     mapping = {
         "course-automation": canvas_groups_set["Course automation"],
@@ -85,21 +91,35 @@ def task_to_group_category_id(task_name, canvas_groups_set):
     return mapping.get(task_name, Exception("Groupset mapping"))
 
 
+# Parse arguments of the script
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', dest='mode', type=str, help='Is only check')
+    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number')
+
+    return parser.parse_args()
+
 
 def main():
-    only_check = sys.argv[1] if 1 < len(sys.argv) else None
+    args = parse_args()
 
+    github_repo.get_pull(args.pr).create_issue_comment("Missing student registration :" + "member")
+
+    # Get GitHub tasks and canvas group set
     github_tasks = get_sub_directory(GITHUB_CONTRIBUTION_PATH)
     canvas_groups_set = course.get_group_categories()
 
     for task_name in github_tasks:
         print("Getting tasks : " + task_name)
+
+        # Get GitHbs groups and check with canvas group set
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
         github_groups = get_sub_directory(github_tasks[task_name]["path"])
 
-        check_groups(canvas_groups_category_id, task_name, github_groups)
+        check_groups(canvas_groups_category_id, task_name, github_groups, args.pr)
 
-        if only_check != 'check':
+        # If not check mode, sync the groups with canvas
+        if args.mode != 'check':
             update_groups(canvas_groups_category_id, github_groups)
 
 
