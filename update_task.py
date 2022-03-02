@@ -105,8 +105,6 @@ def parse_args():
 def main():
     args = parse_args()
 
-    github_repo.get_pull(args.pr).create_issue_comment("Missing student registration :" + "member")
-
     # Get GitHub tasks and canvas group set
     github_tasks = get_sub_directory(GITHUB_CONTRIBUTION_PATH)
     canvas_groups_set = course.get_group_categories()
