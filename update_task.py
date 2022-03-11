@@ -154,14 +154,4 @@ def main():
         if MODE != 'check':
             update_groups(canvas_groups_category_id, github_groups)
 
-
-def test():
-    parse_args()
-    print(MODE)
-    print(README_SECTIONS)
-    print(PR_NUMBER)
-    print(valid_readme("./README.md"))
-
-
-# main()
-test()
+main()
