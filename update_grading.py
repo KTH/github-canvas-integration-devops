@@ -12,12 +12,16 @@ CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 CANVAS_COURSE_ID = os.getenv("CANVAS_COURSE_ID")
 GH_TOKEN = os.getenv("GH_TOKEN")
 GH_REPO_FULLNAME = os.getenv("GH_REPO_FULLNAME")
+
 CANVAS_URL = "https://canvas.kth.se"
 github_repo = Github(GH_TOKEN).get_repo(GH_REPO_FULLNAME)
 course = Course(CANVAS_URL, CANVAS_TOKEN, CANVAS_COURSE_ID)
-issue_assignees = ['vladomitrovic']
-course_repo_name = 'Canvas-API' 
-GITHUB_GRADING_PATH = "./grading-criteria.md"
+
+# Arguments
+ISSUE_ASSIGNEES = ['']
+GITHUB_GRADING_PATH = ''
+MODE = ''
+PR_NUMBER = 0
 
 
 # Parsing the criteria markdown in GITHUB_GRADING_PATH to a dictionary
@@ -70,10 +74,10 @@ def validate_criteria(criteria):
         "Feedback"
     ]
     task_items = [
-            "description",
-            "table",
-            "grading"
-        ]
+        "description",
+        "table",
+        "grading"
+    ]
     table_items = ["Criteria", "Yes", "No"]
 
     errors = ''
@@ -95,7 +99,7 @@ def validate_criteria(criteria):
     if errors:
         print(errors)
         github_repo.create_issue("[CANVAS ACTION] Grading file is not correctly formatted", body=errors,
-                                 assignees=issue_assignees)
+                                 assignees=ISSUE_ASSIGNEES)
         raise Exception("The grading file is not correctly formatted ! ")
 
 
@@ -152,17 +156,31 @@ def update_group_set(github_criteria, canvas_group_set):
 
 # Parse arguments of the script
 def parse_args():
+    global GITHUB_GRADING_PATH
+    global MODE
+    global PR_NUMBER
+    global ISSUE_ASSIGNEES
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', dest='mode', type=str, help='Is only check')
-    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number')
+    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number', default=0)
+    parser.add_argument('--grading', dest='grading_path', type=str, help='Path to the grading criteria',
+                        default='./grading-criteria.md')
+    parser.add_argument('--issue', dest='issue_assignee', type=str, nargs='+', help='List of issue assignee',
+                        default=[''])
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    GITHUB_GRADING_PATH = args.grading_path
+    MODE = args.mode
+    PR_NUMBER = args.pr
+    ISSUE_ASSIGNEES = args.issue_assignee
 
 
 def main():
-    args = parse_args()
+    parse_args()
 
-    if args.mode == 'check':
+    if MODE == 'check':
         print('Check only mode selected,  no update will be made')
         github_criteria = parse_criteria()
 

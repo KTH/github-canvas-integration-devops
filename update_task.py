@@ -11,10 +11,16 @@ CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 CANVAS_COURSE_ID = os.getenv("CANVAS_COURSE_ID")
 GH_TOKEN = os.getenv("GH_TOKEN")
 GH_REPO_FULLNAME = os.getenv("GH_REPO_FULLNAME")
+GITHUB_CONTRIBUTION_PATH = "./contributions"
+
 CANVAS_URL = "https://canvas.kth.se"
 github_repo = Github(GH_TOKEN).get_repo(GH_REPO_FULLNAME)
-GITHUB_CONTRIBUTION_PATH = "./contributions"
 course = Course(CANVAS_URL, CANVAS_TOKEN, CANVAS_COURSE_ID)
+
+# Arguments
+MODE = ''
+PR_NUMBER = 0
+README_SECTIONS = ['']
 
 
 # Get sub directories of a given path
@@ -58,7 +64,7 @@ def update_groups(canvas_groups_category_id, github_groups):
 # Check if the group is valid
 # No same member in same group set
 # Member registered in canvas
-def check_groups(canvas_groups_category_id, task_name, github_groups, pr_number):
+def check_groups(canvas_groups_category_id, task_name, github_groups):
     groups_canvas = course.list_groups(canvas_groups_category_id)
     registered_user = []
     for group_canvas in groups_canvas:
@@ -69,14 +75,28 @@ def check_groups(canvas_groups_category_id, task_name, github_groups, pr_number)
         members = github_group.split("-")
         for member in members:
             if member in registered_user and github_group not in groups_canvas:
-                if pr_number is not None:
-                    github_repo.get_pull(pr_number).create_issue_comment("Student " + member + " already registered for "                                                                             "this task")
+                if PR_NUMBER > 0:
+                    github_repo.get_pull(PR_NUMBER).create_issue_comment(
+                        "Student " + member + " already registered for this task")
                 raise Exception("User {0} already registered for {1} !".format(member, task_name))
             id_member = course.get_user_id(member)
             if id_member is None:
-                if pr_number is not None:
-                    github_repo.get_pull(pr_number).create_issue_comment("Missing student registration :" + member)
+                if PR_NUMBER > 0:
+                    github_repo.get_pull(PR_NUMBER).create_issue_comment("Missing student registration :" + member)
                 raise Exception("User {0} not found !".format(member))
+        if not valid_readme(GITHUB_CONTRIBUTION_PATH + '/' + task_name + '/' + github_group + '/README.md'):
+            if PR_NUMBER > 0:
+                github_repo.get_pull(PR_NUMBER).create_issue_comment("Readme is not correctly formatted\n" +
+                                                                     "Need exactly: " + str(README_SECTIONS))
+            raise Exception("Readme is not correctly formatted")
+
+
+# Check if the readme contains the required info
+def valid_readme(path):
+    f = open(path, "r")
+    file = f.readlines()
+    sections = [s.strip('#').strip() for s in file if s.startswith('#')]
+    return sections == README_SECTIONS
 
 
 # Mapping from github task name to canvas group set id
@@ -95,15 +115,27 @@ def task_to_group_category_id(task_name, canvas_groups_set):
 
 # Parse arguments of the script
 def parse_args():
+    global MODE
+    global PR_NUMBER
+    global README_SECTIONS
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', dest='mode', type=str, help='Is only check')
-    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number')
+    parser.add_argument('--pr', dest='pr', type=int, help='Pull request number', default=0)
 
-    return parser.parse_args()
+    # To handle spaces, use double quote eg. --sections "Assignment Proposal"
+    parser.add_argument('--sections', dest='sections', type=str, nargs='+', help='List readme sections',
+                        default=['Assignment Proposal', 'Title', 'Names and KTH ID', 'Deadline', 'Category',
+                                 'Description'])
+
+    args = parser.parse_args()
+    MODE = args.mode
+    PR_NUMBER = args.pr
+    README_SECTIONS = args.sections
 
 
 def main():
-    args = parse_args()
+    parse_args()
 
     # Get GitHub tasks and canvas group set
     github_tasks = get_sub_directory(GITHUB_CONTRIBUTION_PATH)
@@ -116,11 +148,20 @@ def main():
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
         github_groups = get_sub_directory(github_tasks[task_name]["path"])
 
-        check_groups(canvas_groups_category_id, task_name, github_groups, args.pr)
+        check_groups(canvas_groups_category_id, task_name, github_groups)
 
         # If not check mode, sync the groups with canvas
-        if args.mode != 'check':
+        if MODE != 'check':
             update_groups(canvas_groups_category_id, github_groups)
 
 
-main()
+def test():
+    parse_args()
+    print(MODE)
+    print(README_SECTIONS)
+    print(PR_NUMBER)
+    print(valid_readme("./README.md"))
+
+
+# main()
+test()
