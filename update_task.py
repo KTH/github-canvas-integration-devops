@@ -84,19 +84,21 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
                 if PR_NUMBER > 0:
                     github_repo.get_pull(PR_NUMBER).create_issue_comment("Missing student registration :" + member)
                 raise Exception("User {0} not found !".format(member))
-        if not valid_readme(GITHUB_CONTRIBUTION_PATH + '/' + task_name + '/' + github_group + '/README.md'):
+        sections = get_sections(GITHUB_CONTRIBUTION_PATH + '/' + task_name + '/' + github_group + '/README.md')
+        if not sections == README_SECTIONS:
             if PR_NUMBER > 0:
                 github_repo.get_pull(PR_NUMBER).create_issue_comment("Readme is not correctly formatted\n" +
-                                                                     "Need exactly: " + str(README_SECTIONS))
+                                                                     "Need exactly: " + str(README_SECTIONS) + "\n\n" +
+                                                                     "Got: " + str(sections))
             raise Exception("Readme is not correctly formatted")
 
 
 # Check if the readme contains the required info
-def valid_readme(path):
+def get_sections(path):
     f = open(path, "r")
     file = f.readlines()
     sections = [s.strip('#').strip() for s in file if s.startswith('#')]
-    return sections == README_SECTIONS
+    return sections
 
 
 # Mapping from github task name to canvas group set id
@@ -153,5 +155,6 @@ def main():
         # If not check mode, sync the groups with canvas
         if MODE != 'check':
             update_groups(canvas_groups_category_id, github_groups)
+
 
 main()
