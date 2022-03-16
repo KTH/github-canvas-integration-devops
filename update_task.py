@@ -105,7 +105,7 @@ def get_sections(path):
 def task_to_group_category_id(task_name, canvas_groups_set):
     mapping = {
         "course-automation": canvas_groups_set["Course automation"],
-        "demo": canvas_groups_set["Video Demos"],
+        "demo": canvas_groups_set["Demos"],
         "essay": canvas_groups_set["Essays"],
         "executable-tutorial": canvas_groups_set["Presentations"],
         "feedback": canvas_groups_set["Feedback"],
