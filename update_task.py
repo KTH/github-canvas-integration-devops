@@ -107,7 +107,7 @@ def task_to_group_category_id(task_name, canvas_groups_set):
         "course-automation": canvas_groups_set["Course automation"],
         "demo": canvas_groups_set["Demos"],
         "essay": canvas_groups_set["Essays"],
-        "executable-tutorial": canvas_groups_set["Presentations"],
+        "executable-tutorial": canvas_groups_set["Executable Tutorials"],
         "feedback": canvas_groups_set["Feedback"],
         "open-source": canvas_groups_set["Open-source contributions"],
         "presentation": canvas_groups_set["Presentations"],
@@ -148,7 +148,7 @@ def main():
         github_groups = dict()
         # Get GitHbs groups and check with canvas group set
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
-        if task_name == 'presentation':
+        if task_name == 'presentation' or task_name == 'demo':
             weeks = get_sub_directory(github_tasks[task_name]["path"])
             for week in weeks:
                 github_groups.update(get_sub_directory(os.path.join(github_tasks[task_name]["path"], week)))
