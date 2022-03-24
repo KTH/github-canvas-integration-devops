@@ -136,6 +136,12 @@ def parse_args():
     README_SECTIONS = args.sections
 
 
+def raise_exception(error):
+    if PR_NUMBER > 0:
+        github_repo.get_pull(PR_NUMBER).create_issue_comment(error)
+    raise Exception(error)
+
+
 def main():
     parse_args()
 
@@ -151,6 +157,8 @@ def main():
         if task_name == 'presentation' or task_name == 'demo':
             weeks = get_sub_directory(github_tasks[task_name]["path"])
             for week in weeks:
+                if not week.startswith('week'):
+                    raise_exception("The group folder should be inside a week folder !")
                 github_groups.update(get_sub_directory(os.path.join(github_tasks[task_name]["path"], week)))
         else:
             github_groups = get_sub_directory(github_tasks[task_name]["path"])
