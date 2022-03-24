@@ -84,7 +84,7 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
                 if PR_NUMBER > 0:
                     github_repo.get_pull(PR_NUMBER).create_issue_comment("Missing student registration :" + member)
                 raise Exception("User {0} not found !".format(member))
-        sections = get_sections(GITHUB_CONTRIBUTION_PATH + '/' + task_name + '/' + github_group + '/README.md')
+        sections = get_sections(github_groups[github_group]["path"] + '/README.md')
         if not sections == README_SECTIONS:
             if PR_NUMBER > 0:
                 github_repo.get_pull(PR_NUMBER).create_issue_comment("Readme is not correctly formatted\n" +
@@ -105,9 +105,9 @@ def get_sections(path):
 def task_to_group_category_id(task_name, canvas_groups_set):
     mapping = {
         "course-automation": canvas_groups_set["Course automation"],
-        "demo": canvas_groups_set["Video Demos"],
+        "demo": canvas_groups_set["Demos"],
         "essay": canvas_groups_set["Essays"],
-        "executable-tutorial": canvas_groups_set["Presentations"],
+        "executable-tutorial": canvas_groups_set["Executable Tutorials"],
         "feedback": canvas_groups_set["Feedback"],
         "open-source": canvas_groups_set["Open-source contributions"],
         "presentation": canvas_groups_set["Presentations"],
@@ -145,10 +145,15 @@ def main():
 
     for task_name in github_tasks:
         print("Getting tasks : " + task_name)
-
+        github_groups = dict()
         # Get GitHbs groups and check with canvas group set
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
-        github_groups = get_sub_directory(github_tasks[task_name]["path"])
+        if task_name == 'presentation' or task_name == 'demo':
+            weeks = get_sub_directory(github_tasks[task_name]["path"])
+            for week in weeks:
+                github_groups.update(get_sub_directory(os.path.join(github_tasks[task_name]["path"], week)))
+        else:
+            github_groups = get_sub_directory(github_tasks[task_name]["path"])
 
         check_groups(canvas_groups_category_id, task_name, github_groups)
 
