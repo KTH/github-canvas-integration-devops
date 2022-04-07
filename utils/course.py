@@ -105,7 +105,7 @@ class Course:
 
 
     def list_groups(self, id_group_category):
-        url = "{0}/api/v1/group_categories/{1}/groups".format(self.base_url, id_group_category)
+        url = "{0}/api/v1/group_categories/{1}/groups?per_page=200".format(self.base_url, id_group_category)
         r = requests.get(url, headers=self.header)
         return {group["name"]: group["id"] for group in json.loads(r.content)}
 
