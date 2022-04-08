@@ -77,13 +77,15 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
             if member in registered_user and github_group not in groups_canvas:
                 if PR_NUMBER > 0:
                     github_repo.get_pull(PR_NUMBER).create_issue_comment(
-                        "Student " + member + " already registered for this task")
+                        "Student " + member + " already registered for this task" + "\n\n" +
+                        "If not from your group, fetch the upstream.")
                 raise Exception("User {0} already registered for {1} !".format(member, task_name))
             id_member = course.get_user_id(member)
             if id_member is None:
                 if PR_NUMBER > 0:
-                    github_repo.get_pull(PR_NUMBER).create_issue_comment("Missing student registration :" + member + "\n\n" +
-                                                                         "If not from your group, fetch the upstream.")
+                    github_repo.get_pull(PR_NUMBER).create_issue_comment(
+                        "Missing student registration :" + member + "\n\n" +
+                        "If not from your group, fetch the upstream.")
                 raise Exception("User {0} not found !".format(member))
         sections = get_sections(github_groups[github_group]["path"] + '/README.md')
         if not sections == README_SECTIONS:
