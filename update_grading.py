@@ -70,7 +70,7 @@ def validate_criteria(criteria):
         "Demos",
         "Open-source contributions",
         "Executable Tutorials",
-        "Course automation",
+#        "Course automation",
         "Feedback"
     ]
     task_items = [
