@@ -112,7 +112,7 @@ def task_to_group_category_id(task_name, canvas_groups_set):
         "essay": canvas_groups_set["Essays"],
         "executable-tutorial": canvas_groups_set["Executable Tutorials"],
         "feedback": canvas_groups_set["Feedback"],
-        "open-source": canvas_groups_set["Open-source contributions"],
+        "opensource": canvas_groups_set["Open-source contributions"],
         "presentation": canvas_groups_set["Presentations"],
     }
     return mapping.get(task_name, Exception("Groupset mapping"))
