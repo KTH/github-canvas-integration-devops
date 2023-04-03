@@ -72,6 +72,16 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
         registered_user += members
 
     for github_group in github_groups:
+        
+       if task_name == 'essay' or task_name == 'executable-tutorial':
+            # check that "task X" is in the README
+            fname = github_groups[github_group]["path"] + '/README.md'
+            content = open(fname).read()
+            
+            assert "task 1" in content \
+                or "task 2" in content \
+                or "task 3" in content , "deadline should be stated exactly as 'task x', eg 'task 1'"
+            
         members = github_group.split("-")
         for member in members:
             if member in registered_user and github_group not in groups_canvas:
@@ -157,6 +167,7 @@ def main():
         github_groups = dict()
         # Get GitHbs groups and check with canvas group set
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
+            
         if task_name == 'presentation' or task_name == 'demo':
             weeks = get_sub_directory(github_tasks[task_name]["path"])
             for week in weeks:
