@@ -80,7 +80,7 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
             
             assert "task 1" in content \
                 or "task 2" in content \
-                or "task 3" in content , "deadline should be stated exactly as 'task x', eg 'task 1' in "+fname
+                or "task 3" in content , "deadline should be stated exactly as 'task x', eg 'task 1' in " + content
             
         members = github_group.split("-")
         for member in members:
