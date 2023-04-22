@@ -73,7 +73,7 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
 
     for github_group in github_groups:
         
-        if task_name == 'essay' or task_name == 'executable-tutorial':
+        if task_name == 'essay' or task_name == 'executable-tutorial' or task_name == 'feedback':
             # check that "task X" is in the README
             fname = github_groups[github_group]["path"] + '/README.md'
             content = open(fname).read().lower()
