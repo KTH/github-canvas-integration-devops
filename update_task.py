@@ -73,7 +73,7 @@ def check_groups(canvas_groups_category_id, task_name, github_groups):
 
     for github_group in github_groups:
         
-        if task_name == 'essay' or task_name == 'executable-tutorial' or task_name == 'feedback':
+        if task_name == 'executable-tutorial' or task_name == 'feedback':
             # check that "task X" is in the README
             fname = github_groups[github_group]["path"] + '/README.md'
             content = open(fname).read().lower()
@@ -117,9 +117,8 @@ def get_sections(path):
 # Mapping from github task name to canvas group set id
 def task_to_group_category_id(task_name, canvas_groups_set):
     mapping = {
-        "course-automation": canvas_groups_set["Course automation"],
+        "scientific-paper": canvas_groups_set["Scientific Papers"],
         "demo": canvas_groups_set["Demos"],
-        "essay": canvas_groups_set["Essays"],
         "executable-tutorial": canvas_groups_set["Executable Tutorials"],
         "feedback": canvas_groups_set["Feedback"],
         "opensource": canvas_groups_set["Open-source contributions"],
@@ -168,7 +167,7 @@ def main():
         # Get GitHbs groups and check with canvas group set
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
             
-        if task_name == 'presentation' or task_name == 'demo':
+        if task_name == 'presentation' or task_name == 'demo' or task_name == 'scientific-paper':
             weeks = get_sub_directory(github_tasks[task_name]["path"])
             for week in weeks:
                 if not week.startswith('week'):
