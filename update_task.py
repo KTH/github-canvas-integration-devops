@@ -120,7 +120,7 @@ def task_to_group_category_id(task_name, canvas_groups_set):
         "presentation": canvas_groups_set["Presentations"],
         "scientific-paper": canvas_groups_set["Scientific Papers"],
         "demo": canvas_groups_set["Demos"],
-        "opensource": canvas_groups_set["Open-source contributions"],
+        "open-source": canvas_groups_set["Open-source contributions"],
         "executable-tutorial": canvas_groups_set["Executable Tutorials"],
         "feedback": canvas_groups_set["Feedback"]
     }
@@ -166,7 +166,7 @@ def main():
         github_groups = dict()
         # Get GitHbs groups and check with canvas group set
         print("TASK_NAME", task_name)
-        print("CANVAS_GROUP_SET", canvas_groups_set)
+        print("CANVAS_GROUPS_SET", canvas_groups_set)
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
             
         if task_name == 'presentation' or task_name == 'demo' or task_name == 'scientific-paper':
