@@ -32,6 +32,7 @@ def parse_criteria():
     file = f.read()
     sections = file.split("##")
     result = {}
+    print("RESULT", result)
 
     for section in sections[1:]:
         items = section.split("\n\n\n")
@@ -39,6 +40,7 @@ def parse_criteria():
         result[items[0].strip()]['description'] = items[1]
         result[items[0].strip()]['table'] = parse_table(items[2])
         result[items[0].strip()]['grading'] = items[3]
+    print("ITEMS", items)
     validate_criteria(result)
     return result
 
