@@ -18,23 +18,19 @@ def rubric_payload(id, name, description, criterias, assignment_id):
                }
 
     for i, criteria in enumerate(criterias):
+        if criteria['Requirement'] == 'Mandatory':
+            ratings = {'Mandatory': 1, '-': 0}
+        else:
+            ratings = {'Yes': 1, 'No': 0}
+
         payload["rubric"]["criteria"][str(i + 1)] = {
             "points": 1,
-            "description": criteria['Criteria'],
-            "ratings": {}
+            "description": "{0}: {1}".format(criteria['Criterion'], criteria['Description']),
+            "ratings": {
+                str(j): {"description": label, "points": points}
+                for j, (label, points) in enumerate(ratings.items())
+            }
         }
-
-        for j, option in enumerate(criteria):
-
-            points = 0
-            if criteria[option] == 'Yes': points = 1
-            if criteria[option] == 'Mandatory': points = 1
-
-            if option != 'Criteria':
-                payload["rubric"]["criteria"][str(i + 1)]["ratings"][str(j)] = {
-                    "description": criteria[option],
-                    "points": points,
-                }
 
     return payload
 

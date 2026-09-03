@@ -116,15 +116,17 @@ def get_sections(path):
 
 # Mapping from github task name to canvas group set id
 def task_to_group_category_id(task_name, canvas_groups_set):
-    mapping = {
-        "presentation": canvas_groups_set["Presentations"],
-        "scientific-paper": canvas_groups_set["Scientific Papers"],
-        "demo": canvas_groups_set["Demos"],
-        "open-source": canvas_groups_set["Open-source contributions"],
-        "executable-tutorial": canvas_groups_set["Executable Tutorials"],
-        "feedback": canvas_groups_set["Feedback"]
-    }
-    return mapping.get(task_name, Exception("Groupset mapping"))
+    canvas_group_name = {
+        "project": "Project",
+        "scientific-paper": "Scientific Papers",
+        "demo": "Demos",
+        "open-source": "Open-Source Contribution",
+        "executable-tutorial": "Executable Tutorial",
+        "feedback": "Feedback"
+    }.get(task_name)
+    if canvas_group_name is None:
+        raise Exception("Groupset mapping: unknown task '{0}'".format(task_name))
+    return canvas_groups_set[canvas_group_name]
 
 
 # Parse arguments of the script
@@ -169,7 +171,7 @@ def main():
         print("CANVAS_GROUPS_SET", canvas_groups_set)
         canvas_groups_category_id = task_to_group_category_id(task_name, canvas_groups_set)
             
-        if task_name == 'presentation' or task_name == 'demo' or task_name == 'scientific-paper':
+        if task_name == 'demo' or task_name == 'scientific-paper':
             weeks = get_sub_directory(github_tasks[task_name]["path"])
             for week in weeks:
                 if not week.startswith('week'):
